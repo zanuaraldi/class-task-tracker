@@ -227,6 +227,23 @@ describe('Tasks & Classes Module Integration Tests', () => {
       expect(json.success).toBe(true);
       expect(Array.isArray(json.data)).toBe(true);
     });
+
+    it('endpoint GET /api/tasks/stats berhasil mengembalikan statistik mingguan dan rekap tugas (200)', async () => {
+      const res = await app.request('/api/tasks/stats', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${student1Token}` },
+      });
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(typeof json.data.total).toBe('number');
+      expect(typeof json.data.done).toBe('number');
+      expect(typeof json.data.pending).toBe('number');
+      expect(typeof json.data.completion).toBe('number');
+      expect(Array.isArray(json.data.week)).toBe(true);
+      expect(json.data.week.length).toBe(7);
+    });
   });
 
   describe('POST & DELETE /api/tasks/:id/complete (Student Completion)', () => {

@@ -29,6 +29,12 @@ export class TasksController {
     return c.json(successResponse(tasks, 'Daftar tugas mendekati tenggat waktu berhasil dimuat.'));
   }
 
+  static async getTaskStats(c: Context) {
+    const user = c.get('user') as JwtUserPayload;
+    const stats = await TasksService.getTaskStats(user);
+    return c.json(successResponse(stats, 'Statistik tugas berhasil dimuat.'));
+  }
+
   static async getTaskById(c: Context) {
     const user = c.get('user') as JwtUserPayload;
     const id = Number(c.req.param('id'));

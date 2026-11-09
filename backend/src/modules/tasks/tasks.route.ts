@@ -9,6 +9,7 @@ tasksRouter.use('*', authMiddleware);
 
 tasksRouter.get('/', TasksController.getTasks);
 tasksRouter.get('/upcoming', TasksController.getUpcomingTasks);
+tasksRouter.get('/stats', TasksController.getTaskStats);
 tasksRouter.post('/', isTeacher, TasksController.createTask);
 tasksRouter.get('/:id', TasksController.getTaskById);
 tasksRouter.put('/:id', isTeacher, TasksController.updateTask);

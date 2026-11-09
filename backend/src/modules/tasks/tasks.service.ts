@@ -447,4 +447,87 @@ export class TasksService {
       students: studentsStatus,
     };
   }
+
+  static async getTaskStats(user: JwtUserPayload) {
+    const filterParams: TaskFilterParams = {
+      page: 1,
+      limit: 100,
+      status: 'all',
+      dueStatus: 'all',
+    };
+
+    const taskResult = await this.getTasks(filterParams, user);
+    const allTasks = taskResult.items;
+
+    const today = new Date();
+    const dayOfWeek = (today.getDay() + 6) % 7;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - dayOfWeek);
+    monday.setHours(0, 0, 0, 0);
+
+    let total = allTasks.length;
+    let done = 0;
+    let pending = 0;
+    let completion = 0;
+    let dueSoon = 0;
+    const soon = allTasks.filter((t) => t.isDueSoon && (user.role === 'teacher' || !t.isCompleted)).slice(0, 4);
+
+    if (user.role === 'teacher') {
+      let totalExpected = 0;
+      for (const t of allTasks) {
+        const completedCount = t.completionStats?.completedCount || 0;
+        const totalStudents = t.completionStats?.totalStudents || 0;
+        done += completedCount;
+        totalExpected += totalStudents;
+        if (t.isDueSoon) dueSoon++;
+      }
+      pending = Math.max(0, totalExpected - done);
+      completion = totalExpected > 0 ? Math.round((done / totalExpected) * 100) : 0;
+    } else {
+      done = allTasks.filter((t) => t.isCompleted).length;
+      pending = Math.max(0, total - done);
+      completion = total > 0 ? Math.round((done / total) * 100) : 0;
+      dueSoon = allTasks.filter((t) => t.isDueSoon && !t.isCompleted).length;
+    }
+
+    const week = Array.from({ length: 7 }, (_, i) => {
+      const dayStart = new Date(monday);
+      dayStart.setDate(monday.getDate() + i);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      let dayDone = 0;
+      let dayPending = 0;
+
+      for (const t of allTasks) {
+        if (t.dueDate) {
+          const d = new Date(t.dueDate);
+          if (d >= dayStart && d <= dayEnd) {
+            if (user.role === 'teacher') {
+              const comp = t.completionStats?.completedCount || 0;
+              const tot = t.completionStats?.totalStudents || 0;
+              dayDone += comp;
+              dayPending += Math.max(0, tot - comp);
+            } else {
+              if (t.isCompleted) dayDone++;
+              else dayPending++;
+            }
+          }
+        }
+      }
+
+      return { done: dayDone, pending: dayPending };
+    });
+
+    return {
+      total,
+      done,
+      pending,
+      completion,
+      dueSoon,
+      due_soon: dueSoon,
+      week,
+      soon,
+    };
+  }
 }

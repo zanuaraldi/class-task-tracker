@@ -22,3 +22,19 @@ export interface TaskFilterParams {
   page?: number;
   limit?: number;
 }
+
+export interface TaskWeekDayActivity {
+  done: number;
+  pending: number;
+}
+
+export interface TaskStatsData {
+  total: number;
+  done: number;
+  pending: number;
+  completion: number;
+  dueSoon: number;
+  due_soon: number;
+  week: TaskWeekDayActivity[];
+  soon: any[];
+}

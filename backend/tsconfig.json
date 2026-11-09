@@ -1,6 +1,9 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "types": [
+      "bun"
+    ],
     "moduleResolution": "node",
     "baseUrl": "./src",
     "outDir": "dist",
@@ -8,7 +11,16 @@
       "@/*": [
         "*"
       ],
+      "@shared": [
+        "../shared/index.ts"
+      ],
       "@shared/*": [
+        "../shared/*"
+      ],
+      "@class-task-tracker/shared": [
+        "../shared/index.ts"
+      ],
+      "@class-task-tracker/shared/*": [
         "../shared/*"
       ]
     }

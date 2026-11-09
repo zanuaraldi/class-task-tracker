@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "@class-task-tracker/frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@class-task-tracker/shared": "workspace:*",
     "@tailwindcss/vite": "^4.1.14",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

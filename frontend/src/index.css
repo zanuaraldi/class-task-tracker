@@ -487,8 +487,10 @@ h2 {
 }
 
 .tick {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   flex: none;
   border-radius: 50%;
   border: 2px solid #cfcfcf;
@@ -496,6 +498,16 @@ h2 {
   place-items: center;
   color: var(--ink);
   transition: 0.2s;
+  position: relative;
+}
+
+.tick::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
 }
 
 .tick.on {
@@ -946,6 +958,18 @@ dialog, .modal-box {
 }
 
 @media (max-width: 600px) {
+  .hero-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .top-r {
+    width: 100%;
+    justify-content: space-between;
+  }
+  #search, .search-input {
+    width: 100%;
+    max-width: calc(100% - 54px);
+  }
   .stats {
     grid-template-columns: 1fr;
   }
@@ -960,5 +984,26 @@ dialog, .modal-box {
   }
   .row {
     flex-wrap: wrap;
+    gap: 10px;
+  }
+  .acts {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .card-h {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .h-r {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .pills {
+    flex-wrap: wrap;
+  }
+  .toast {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
   }
 }

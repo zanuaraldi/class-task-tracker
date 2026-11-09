@@ -1,818 +1,249 @@
-# 📚 Dokumentasi Struktur Proyek
+# 📋 Class Task Tracker — SchoolTech Indonesia
 
-## 🛠️ Tech Stack
+[![Bun](https://img.shields.io/badge/Bun-1.3+-fbf0df?logo=bun&logoColor=black)](https://bun.sh)
+[![Hono](https://img.shields.io/badge/Hono-v4-E36002?logo=hono&logoColor=white)](https://hono.dev)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-PostgreSQL-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tests](https://img.shields.io/badge/Tests-31%20Passed-success?logo=checkmarx&logoColor=white)](https://bun.sh)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
 
-### Frontend
-- **React** - Library UI
-- **Vite** - Build tool & dev server
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling utility-first
+Aplikasi **Manajemen Tugas Kelas (Class Task Tracker)** berarsitektur monorepo modern, dibangun untuk memenuhi **Tes Praktik & Kompetensi Fullstack Developer Magang — SchoolTech Indonesia**.
 
-### Backend
-- **Hono** - Lightweight web framework
-- **Drizzle ORM** - Type-safe ORM
-- **Bun** - JavaScript runtime & package manager
-- **PostgreSQL** - Relational database
+Aplikasi memfasilitasi guru dalam mengelola tugas (CRUD, pemantauan progres pengerjaan siswa per kelas) dan membantu siswa melihat daftar tugas, memfilter status pengerjaan, mencari tugas, serta menandai penyelesaian tugas secara **idempoten**.
 
 ---
 
-## 📁 Struktur Proyek
+## 📑 Daftar Isi
 
-### Root Level
+- [Tech Stack & Arsitektur](#-tech-stack--arsitektur)
+- [Nilai Tambah (Value-Add Bonus)](#-nilai-tambah-value-add-bonus)
+- [Prasyarat Sistem](#-prasyarat-sistem)
+- [Panduan Instalasi & Menjalankan dari Nol](#-panduan-instalasi--menjalankan-dari-nol)
+- [Akun Demo Pengujian](#-akun-demo-pengujian)
+- [Daftar Endpoint REST API](#-daftar-endpoint-rest-api)
+- [Dokumentasi API & Pengujian Postman](#-dokumentasi-api--pengujian-postman)
+- [Keputusan Desain & Arsitektur (ADR)](#-keputusan-desain--arsitektur-adr)
+- [Keterbukaan Penggunaan Alat AI (AI Disclosure)](#-keterbukaan-penggunaan-alat-ai-ai-disclosure)
+- [Catatan Pengembangan Selanjutnya](#-catatan-pengembangan-selanjutnya)
+
+---
+
+## 🛠️ Tech Stack & Arsitektur
+
+Proyek ini disusun menggunakan pola **Monorepo Bun Workspaces**:
+
 ```bash
-root-project/
-├── frontend/               # React + Vite (client)
-├── backend/                # Hono + Drizzle (API)
-├── shared/                 # Shared types, constants & utilities
-├── package.json            # Root workspace config
-├── bun.lockb              # Bun lock file
-├── tsconfig.base.json      # Base TypeScript config
-├── .gitignore
-├── .env.example           # Template environment variables
-├── docker-compose.yml     # Docker setup (optional)
-└── README.md
+class-task-tracker/
+├── backend/            # REST API Service (Hono + Drizzle ORM + PostgreSQL)
+├── frontend/           # Web Client (React 19 + Vite + Tailwind CSS v4)
+├── shared/             # Package @class-task-tracker/shared (DTOs, Entities, Constants, Utils)
+├── docs/               # Living Documentation, API Specs, Test Answers & Runbooks
+├── package.json        # Workspace orchestrator
+└── tsconfig.base.json  # Shared TypeScript configuration
 ```
-    💡 Catatan:
-    Jika menggunakan monorepo dengan `bun` workspaces, setiap folder (`frontend/` & `backend/`) tetap memiliki `package.json` sendiri.
-    Install dependency dilakukan di folder masing-masing, bukan di root.
+
+### Rincian Teknologi
+- **Backend Runtime & Framework:** [Bun](https://bun.sh) v1.3+ dan [Hono](https://hono.dev) v4 (supercepat, ringan, dan type-safe).
+- **Database & ORM:** [PostgreSQL](https://www.postgresql.org) 17 + [Drizzle ORM](https://orm.drizzle.team) dengan parameterized queries anti-SQL Injection.
+- **Autentikasi & Keamanan:** Stateless JWT (`hono/jwt`) dengan password hashing modern (`Bun.password` berbasis bcrypt/argon2), proteksi role-based middleware (`teacher` vs `student`), serta validasi skema runtime via [Zod](https://zod.dev).
+- **Shared Layer (`@class-task-tracker/shared`):** Kontrak data, DTO request/response, interface entitas, dan utilitas penanggalan yang dipakai bersama antara backend dan frontend.
+- **Frontend:** React 19, Vite, dan Tailwind CSS v4 (Desain modern bergaya *Eco System* dengan dark sidebar, hero banner sage, circular progress ring, dan full responsif).
 
 ---
 
-## 🔧 Backend Structure
+## 🌟 Nilai Tambah (Value-Add Bonus)
 
-### Folder Layout
+Dari ketentuan lembar tes kompetensi, proyek ini mengimplementasikan ke-4 nilai tambah backend & arsitektur secara komprehensif:
+
+1. **Automated Feature & Integration Test Suite (30 Tests Passed):**  
+   Pengujian otomatis komprehensif menggunakan native Bun test runner. Menguji alur autentikasi, registrasi email duplikat, proteksi hak akses (RBAC), pembatasan siswa agar tidak bisa mengubah/menghapus tugas, isolasi tugas lintas kelas, filter pencarian & paginasi, hingga jaminan idempotensi `complete task` dan `untoggle completion`.
+2. **Dokumentasi API Lengkap (Postman Collection v2.1 + OpenAPI 3.1.0):**  
+   - Koleksi Postman lengkap dengan **Auto-Token Capture Test Scripts** (`pm.environment.set('token', ...)`). Penguji cukup klik Login sekali dan seluruh request tugas langsung terotentikasi otomatis.
+   - Dokumen spesifikasi [OpenAPI 3.1.0](./docs/reference/openapi.json) yang kompatibel dengan Swagger UI.
+3. **Dockerfile & Docker-Compose (Instant One-Command Setup):**  
+   Menyediakan konfigurasi `backend/Dockerfile` multi-stage dan `docker-compose.yml` di root proyek. Cukup jalankan `docker compose up -d` untuk menyalakan kontainer PostgreSQL 17 + Backend Hono lengkap dengan auto-migrate & auto-seed data demo tanpa perlu instalasi lokal.
+4. **Notifikasi Tugas yang Mendekati Tenggat (Deadline Warning & Upcoming Tasks):**  
+   Setiap tugas secara otomatis menyertakan indikator status tenggat `isOverdue` (lewat deadline) dan `isDueSoon` (jatuh tempo dalam <48 jam). Dilengkapi filter query `?dueStatus=due_soon|overdue` serta endpoint khusus `GET /api/tasks/upcoming` untuk mengambil daftar tugas mendesak.
+
+---
+
+## 💻 Prasyarat Sistem
+
+Sebelum menjalankan aplikasi, pastikan sistem Anda telah terpasang:
+- **[Bun Runtime](https://bun.sh):** v1.1.0 atau lebih baru (`bun --version`).
+- **PostgreSQL Database:** v14 ke atas (diuji pada PostgreSQL 17 di `localhost:5432`).
+- **Git:** Untuk manajemen source control.
+
+---
+
+## 🚀 Panduan Instalasi & Menjalankan dari Nol
+
+Anda dapat memilih menjalankan aplikasi menggunakan **Docker Compose (Paling Praktis)** atau **Setup Lokal Manual via Bun**:
+
+### 🐳 Opsi A: Menjalankan Cepat via Docker Compose (Rekomendasi)
+Jika di komputer Anda sudah terpasang Docker Desktop:
 ```bash
-backend/
-├── src/
-│   ├── modules/                  # Fitur utama sistem (Modular Feature Folder)
-│   │   ├── auth/
-│   │   │   ├── auth.controller.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── auth.route.ts
-│   │   │   ├── auth.validator.ts
-│   │   │   ├── auth.dto.ts
-│   │   │   └── auth.test.ts
-│   │   ├── siswa/
-│   │   │   ├── siswa.controller.ts
-│   │   │   ├── siswa.service.ts
-│   │   │   ├── siswa.route.ts
-│   │   │   ├── siswa.validator.ts
-│   │   │   ├── siswa.dto.ts
-│   │   │   └── siswa.test.ts
-│   │   ├── kelas/
-│   │   ├── kegiatan/
-│   │   ├── pembayaran/
-│   │   └── laporan/
-│   │
-│   ├── db/                      # Database configuration & schema
-│   │   ├── schema/              # Pendefinisian Schema Drizzle
-│   │   │   ├── siswa.schema.ts
-│   │   │   ├── kelas.schema.ts
-│   │   │   └── index.ts
-│   │   ├── migrations/          # Database migrations
-│   │   ├── seeds/               # Seed data
-│   │   │   └── dev.seed.ts
-│   │   ├── connection.ts        # DB connection pool
-│   │   └── index.ts
-│   │
-│   ├── middlewares/             # Global middlewares
-│   │   ├── auth.middleware.ts
-│   │   ├── error.middleware.ts
-│   │   ├── logger.middleware.ts
-│   │   ├── validation.middleware.ts # (Optional)
-│   │   ├── cors.middleware.ts # (Optional)
-│   │   └── rate-limit.middleware.ts # (Optional)
-│   │
-│   ├── utils/                   # Helper functions
-│   │   ├── response.ts          # Standardized API responses
-│   │   ├── formatter.ts         # Data formatting utilities
-│   │   ├── hash.ts              # Password hashing
-│   │   ├── jwt.ts               # JWT token utilities
-│   │   ├── pagination.ts        # Pagination helper
-│   │   └── env.ts               # Environment variable parser
-│   │
-│   ├── routes/                  # Route aggregation
-│   │   ├── index.ts             # Main router
-│   │   └── api.ts               # API versioning (v1, v2)
-│   │
-│   ├── config/                  # Configuration files
-│   │   ├── app.config.ts        # App-level config
-│   │   ├── db.config.ts         # Database config
-│   │   └── env.config.ts        # Environment config
-│   │
-│   ├── types/                   # TypeScript type definitions
-│   │   ├── api-response.ts
-│   │   ├── request.ts
-│   │   ├── user.ts
-│   │   ├── pagination.ts
-│   │   └── index.ts
-│   │
-│   ├── constants/               # Application constants
-│   │   ├── roles.ts
-│   │   ├── status.ts
-│   │   └── errors.ts
-│   │
-│   └── server.ts                # Application entry point
-│
-├── tests/                       # Integration & E2E tests
-│   ├── integration/
-│   └── e2e/
-│
-├── .env
-├── .env.example
-├── tsconfig.json
-├── drizzle.config.ts
-└── package.json
+# 1. Jalankan kontainer database PostgreSQL 17 dan Backend Hono API
+docker compose up -d
+
+# 2. Periksa log booting & seed data
+docker compose logs -f backend
 ```
-
-### 📘 Penjelasan Komponen Backend
-
-#### 🧩 `modules/` - Feature Modules
-Setiap modul merepresentasikan satu domain bisnis dengan struktur lengkap:
-
-| File              | Tanggung Jawab                                              | Contoh                                    |
-| ----------------- | ----------------------------------------------------------- | ----------------------------------------- |
-| `*.controller.ts` | Handle HTTP request/response, validasi input                | Parse body, call service, return response |
-| `*.service.ts`    | Business logic, orchestrate data operations                 | CRUD operations, business rules           |
-| `*.route.ts`      | Define endpoints & middleware chain                         | `/api/siswa`, apply auth middleware       |
-| `*.validator.ts`  | Input validation schemas (Zod)                              | Validate create/update payloads           |
-| `*.dto.ts`        | Data Transfer Objects (input/output typing)                 | CreateSiswaDTO, SiswaResponseDTO          |
-| `*.test.ts`       | Unit tests untuk modul                                      | Test service logic, controller responses  |
-
-**Contoh `siswa.dto.ts`:**
-```typescript
-// Input DTOs
-export interface CreateSiswaDTO {
-  nama: string;
-  nis: string;
-  tanggalLahir: Date;
-  kelasId: number;
-  jenisKelamin: 'L' | 'P';
-}
-
-export interface UpdateSiswaDTO extends Partial<CreateSiswaDTO> {
-  id: number;
-}
-
-// Output DTOs
-export interface SiswaResponseDTO {
-  id: number;
-  nama: string;
-  nis: string;
-  kelas: {
-    id: number;
-    nama: string;
-  };
-  createdAt: Date;
-}
-```
-
-**Contoh `siswa.validator.ts`:**
-```typescript
-import { z } from 'zod';
-
-export const createSiswaSchema = z.object({
-  nama: z.string().min(3).max(100),
-  nis: z.string().length(10),
-  tanggalLahir: z.coerce.date(),
-  kelasId: z.number().positive(),
-  jenisKelamin: z.enum(['L', 'P']),
-});
-
-export const updateSiswaSchema = createSiswaSchema.partial().extend({
-  id: z.number().positive(),
-});
-```
-
-#### 🗃️ `db/` - Database Layer
-Struktur terorganisir untuk manajemen database:
-
-**`schema/`** - Definisi tabel Drizzle ORM per domain
-```typescript
-// db/schema/siswa.schema.ts
-import { pgTable, serial, varchar, date, integer } from 'drizzle-orm/pg-core';
-
-export const siswa = pgTable('siswa', {
-  id: serial('id').primaryKey(),
-  nama: varchar('nama', { length: 100 }).notNull(),
-  nis: varchar('nis', { length: 10 }).notNull().unique(),
-  tanggalLahir: date('tanggal_lahir').notNull(),
-  kelasId: integer('kelas_id').references(() => kelas.id),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-```
-
-**`migrations/`** - Version control untuk database schema
-
-**`seeds/`** - Data awal untuk development/testing
-
-**`connection.ts`** - Database connection pool setup
-
-#### 🧱 `middlewares/` - Global Middlewares
-Middleware yang diterapkan secara global atau per-route:
-
-```typescript
-// auth.middleware.ts
-export const authMiddleware = async (c: Context, next: Next) => {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-  
-  try {
-    const payload = await verifyJWT(token);
-    c.set('user', payload);
-    await next();
-  } catch (error) {
-    return c.json({ error: 'Invalid token' }, 401);
-  }
-};
-
-// error.middleware.ts
-export const errorHandler = (err: Error, c: Context) => {
-  console.error('Error:', err);
-  
-  if (err instanceof ValidationError) {
-    return c.json({ error: err.message, details: err.errors }, 400);
-  }
-  
-  return c.json({ error: 'Internal Server Error' }, 500);
-};
-```
-
-#### 🧰 `utils/` - Utility Functions
-Helper functions untuk operasi umum:
-
-```typescript
-// response.ts - Standardized API responses
-export const successResponse = <T>(data: T, message = 'Success') => ({
-  success: true,
-  message,
-  data,
-});
-
-export const errorResponse = (message: string, errors?: any) => ({
-  success: false,
-  message,
-  errors,
-});
-
-// pagination.ts
-export const paginate = (page: number, limit: number) => ({
-  offset: (page - 1) * limit,
-  limit,
-});
-```
-
-#### 🚀 `server.ts` - Entry Point
-```typescript
-import { Hono } from 'hono';
-import { logger } from 'hono/logger';
-import { cors } from 'hono/cors';
-import routes from './routes';
-import { errorHandler } from './middlewares/error.middleware';
-
-const app = new Hono();
-
-// Global middlewares
-app.use('*', logger());
-app.use('*', cors());
-
-// Routes
-app.route('/api/v1', routes);
-
-// Error handler
-app.onError(errorHandler);
-
-// Health check
-app.get('/health', (c) => c.json({ status: 'ok' }));
-
-export default app;
-```
+*Kontainer akan otomatis menginisialisasi DB `schooltech-test`, menjalankan push migrasi Drizzle, mengeksekusi seeder akun demo, dan menyalakan backend di `http://localhost:3000`.*
 
 ---
 
-## 🎨 Frontend Structure
+### 💻 Opsi B: Setup Lokal Manual via Bun
 
-### Folder Layout
+Ikuti 6 langkah berikut jika ingin menjalankan langsung di lingkungan lokal:
+
+### 1. Clone Repositori
 ```bash
-frontend/
-├── src/
-│   ├── assets/               # Gambar, ikon, font, dll
-│   │   ├── images/
-│   │   ├── icons/
-│   │   └── fonts/
-│   │
-│   ├── components/           # Komponen UI reusable (Button, UI, Forms, Layout, Modal, Table, Input)
-│   │   ├── ui/               # Base components (Button, Input, Modal)
-│   │   │   ├── Button.tsx
-│   │   │   ├── Input.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   ├── Table.tsx
-│   │   │   └── index.ts
-│   │   ├── forms/            # Form-related components
-│   │   │   ├── FormInput.tsx
-│   │   │   ├── FormSelect.tsx
-│   │   │   └── FormDatePicker.tsx
-│   │   └── layout/           # Layout components
-│   │       ├── Header.tsx
-│   │       ├── Sidebar.tsx
-│   │       └── Footer.tsx
-│   │
-│   ├── features/             # Modular features (sinkron dengan backend)
-│   │   ├── auth/
-│   │   │   ├── components/
-│   │   │   │   ├── LoginForm.tsx
-│   │   │   │   └── RegisterForm.tsx
-│   │   │   ├── pages/
-│   │   │   │   ├── LoginPage.tsx
-│   │   │   │   └── RegisterPage.tsx
-│   │   │   ├── hooks/
-│   │   │   │   └── useAuth.ts
-│   │   │   ├── api/
-│   │   │   │   └── authApi.ts
-│   │   │   └── types.ts
-│   │   ├── siswa/
-│   │   │   ├── components/
-│   │   │   │   ├── SiswaTable.tsx
-│   │   │   │   ├── SiswaForm.tsx
-│   │   │   │   └── SiswaCard.tsx
-│   │   │   ├── pages/
-│   │   │   │   ├── SiswaListPage.tsx
-│   │   │   │   ├── SiswaDetailPage.tsx
-│   │   │   │   └── SiswaCreatePage.tsx
-│   │   │   ├── hooks/
-│   │   │   │   ├── useSiswa.ts
-│   │   │   │   └── useSiswaQuery.ts
-│   │   │   ├── api/
-│   │   │   │   └── siswaApi.ts
-│   │   │   └── types.ts
-│   │   ├── pembayaran/
-│   │   ├── kegiatan/
-│   │   └── laporan/
-│   │
-│   ├── layouts/               # Layout utama (AdminLayout, AuthLayout, dll)
-│   │   ├── RootLayout.tsx
-│   │   ├── AuthLayout.tsx
-│   │   ├── DashboardLayout.tsx
-│   │   └── index.ts
-│   │
-│   ├── pages/                # Halaman umum (Login, Dashboard, NotFound)
-│   │   ├── HomePage.tsx
-│   │   ├── DashboardPage.tsx
-│   │   ├── NotFoundPage.tsx
-│   │   └── ErrorPage.tsx
-│   │
-│   ├── hooks/                # Custom React hooks (useAuth, useFetch, dsb)
-│   │   ├── useAuth.ts
-│   │   ├── useFetch.ts
-│   │   ├── useDebounce.ts
-│   │   ├── useLocalStorage.ts
-│   │   └── index.ts
-│   │
-│   ├── routes/               # Routing global (react-router)
-│   │   ├── index.tsx
-│   │   ├── ProtectedRoute.tsx
-│   │   └── routes.config.ts
-│   │
-│   ├── services/             # API client (fetch/axios wrapper)
-│   │   ├── api/
-│   │   │   ├── client.ts     # Axios/Fetch wrapper
-│   │   │   ├── interceptors.ts
-│   │   │   └── endpoints.ts
-│   │   └── storage/
-│   │       └── localStorage.ts
-│   │
-│   ├── stores/               # State management (Zustand/Redux)
-│   │   ├── auth.store.ts
-│   │   ├── ui.store.ts
-│   │   └── index.ts
-│   │
-│   ├── utils/                # Helper seperti format tanggal, konversi data
-│   │   ├── format.ts         # Date, currency, number formatting
-│   │   ├── validation.ts     # Frontend validation helpers
-│   │   ├── cn.ts             # Tailwind class merger
-│   │   └── index.ts
-│   │
-│   ├── types/                # TypeScript interfaces (frontend-only)
-│   │   ├── api.types.ts
-│   │   ├── user.types.ts
-│   │   └── index.ts
-│   │
-│   ├── constants/            # Konstanta global (role, baseURL, dsb)
-│   │   ├── routes.ts
-│   │   ├── roles.ts
-│   │   ├── status.ts
-│   │   └── index.ts
-│   │
-│   ├── styles/               # Global styles
-│   │   ├── globals.css
-│   │   └── tailwind.css
-│   │
-│   ├── lib/                  # Third-party library configs
-│   │   ├── react-query.ts
-│   │   └── axios.ts
-│   │
-│   ├── App.tsx               # Root React component
-│   ├── main.tsx              # Entry point (Vite)
-│   └── vite-env.d.ts         # Vite type definitions
-│
-├── public/                   # Static files
-│   ├── favicon.ico
-│   └── robots.txt
-│
-├── .env
-├── .env.example
-├── index.html
-├── tsconfig.json
-├── tsconfig.node.json
-├── vite.config.ts
-├── tailwind.config.js
-├── postcss.config.js
-└── package.json
+git clone https://github.com/<username>/class-task-tracker.git
+cd class-task-tracker
 ```
 
-### 📘 Penjelasan Komponen Frontend
-
-#### 🧩 `features/` - Feature Modules
-Mengikuti prinsip feature-based architecture untuk skalabilitas:
-
-**Struktur per Feature:**
-```
-feature/
-├── components/     # UI components khusus feature
-├── pages/          # Page components
-├── hooks/          # Custom hooks untuk feature
-├── api/            # API calls
-└── types.ts        # Type definitions
-```
-
-**Contoh `features/siswa/api/siswaApi.ts`:**
-```typescript
-import { apiClient } from '@/services/api/client';
-import type { Siswa, CreateSiswaDTO } from '@/types';
-
-export const siswaApi = {
-  getAll: (params?: { page?: number; limit?: number }) =>
-    apiClient.get<Siswa[]>('/siswa', { params }),
-  
-  getById: (id: number) =>
-    apiClient.get<Siswa>(`/siswa/${id}`),
-  
-  create: (data: CreateSiswaDTO) =>
-    apiClient.post<Siswa>('/siswa', data),
-  
-  update: (id: number, data: Partial<CreateSiswaDTO>) =>
-    apiClient.put<Siswa>(`/siswa/${id}`, data),
-  
-  delete: (id: number) =>
-    apiClient.delete(`/siswa/${id}`),
-};
-```
-
-**Contoh `features/siswa/hooks/useSiswa.ts`:**
-```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { siswaApi } from '../api/siswaApi';
-
-export const useSiswa = (id?: number) => {
-  const queryClient = useQueryClient();
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['siswa', id],
-    queryFn: () => id ? siswaApi.getById(id) : siswaApi.getAll(),
-    enabled: !!id,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: siswaApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siswa'] });
-    },
-  });
-
-  return {
-    siswa: data,
-    isLoading,
-    createSiswa: createMutation.mutate,
-  };
-};
-```
-
-#### 🧱 `layouts/` - Layout Components
-Template untuk struktur halaman:
-
-```typescript
-// DashboardLayout.tsx
-import { Header, Sidebar } from '@/components/layout';
-import { Outlet } from 'react-router-dom';
-
-export const DashboardLayout = () => {
-  return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  );
-};
-```
-
-#### ⚙️ `services/api/client.ts` - API Client
-Wrapper untuk HTTP requests dengan interceptors:
-
-```typescript
-import axios from 'axios';
-
-export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Response interceptor
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-```
-
-#### 📦 `stores/` - State Management
-Global state menggunakan Zustand:
-
-```typescript
-// auth.store.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  setAuth: (user: User, token: string) => void;
-  logout: () => void;
-}
-
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      setAuth: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
-    }),
-    {
-      name: 'auth-storage',
-    }
-  )
-);
-```
-
----
-
-## 🔗 Shared Module
-
-### Folder Layout
+### 2. Instalasi Dependensi Seluruh Workspace
 ```bash
-shared/
-├── types/                    # Shared type definitions
-│   ├── entities/
-│   │   ├── siswa.ts
-│   │   ├── kelas.ts
-│   │   ├── kegiatan.ts
-│   │   └── pembayaran.ts
-│   ├── dtos/
-│   │   └── api-response.ts
-│   └── index.ts
-│
-├── constants/                # Shared constants
-│   ├── roles.ts
-│   ├── status.ts
-│   └── index.ts
-│
-├── utils/                    # Shared utilities
-│   ├── format.ts
-│   ├── validation.ts
-│   └── index.ts
-│
-└── package.json
-```
-
-### 📘 Keuntungan Shared Module
-
-1. **Type Safety** - Frontend & backend menggunakan type yang sama
-2. **Single Source of Truth** - Tidak ada duplikasi definisi
-3. **Easier Refactoring** - Perubahan type hanya di satu tempat
-
-**Contoh `shared/types/entities/siswa.ts`:**
-```typescript
-export interface Siswa {
-  id: number;
-  nama: string;
-  nis: string;
-  tanggalLahir: Date;
-  kelasId: number;
-  jenisKelamin: 'L' | 'P';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateSiswaInput {
-  nama: string;
-  nis: string;
-  tanggalLahir: Date;
-  kelasId: number;
-  jenisKelamin: 'L' | 'P';
-}
-```
-
-**Usage di Backend:**
-```typescript
-import type { Siswa, CreateSiswaInput } from '@shared/types';
-```
-
-**Usage di Frontend:**
-```typescript
-import type { Siswa, CreateSiswaInput } from '@shared/types';
-```
-
----
-
-## 🎯 Best Practices
-
-### 1. Naming Conventions
-- **Files**: kebab-case (`siswa.service.ts`)
-- **Components**: PascalCase (`SiswaForm.tsx`)
-- **Functions/Variables**: camelCase (`getSiswaById`)
-- **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`)
-- **Types/Interfaces**: PascalCase (`SiswaResponseDTO`)
-
-### 2. Code Organization
-- **One responsibility per file**
-- **Export dari index.ts** untuk cleaner imports
-- **Group related files** dalam folder yang sama
-- **Separate business logic** dari UI logic
-
-### 3. Type Safety
-- **Avoid `any` type** - gunakan `unknown` atau specific types
-- **Use strict TypeScript** config
-- **Define DTOs** untuk input/output
-- **Share types** antara frontend & backend
-
-### 4. Error Handling
-- **Consistent error format** di API responses
-- **Proper HTTP status codes**
-- **User-friendly error messages** di frontend
-- **Log errors** untuk debugging
-
-### 5. Testing
-- **Unit tests** untuk service layer
-- **Integration tests** untuk API endpoints
-- **Component tests** untuk UI
-- **E2E tests** untuk critical flows
-
-### 6. Security
-- **Validate all inputs** (frontend & backend)
-- **Use prepared statements** (SQL injection prevention)
-- **Implement rate limiting**
-- **Secure JWT tokens**
-- **Hash passwords** dengan bcrypt/argon2
-- **CORS configuration** yang tepat
-
-### 7. Performance
-- **Implement pagination** untuk list data
-- **Use database indexing**
-- **Lazy load components**
-- **Optimize bundle size**
-- **Cache responses** where appropriate
-
----
-
-## 📊 Architecture Summary
-
-| Layer    | Struktur                                                | Prinsip                                   |
-| -------- | ------------------------------------------------------- | ----------------------------------------- |
-| Root     | `frontend/`, `backend/`, `shared/`                      | Monorepo Workspaces                       |
-| Backend  | `modules`, `middlewares`, `db`, `utils`, `config`       | Clean Architecture & Layered Architecture |
-| Frontend | `features`, `components`, `layouts`, `services`, `stores` | Feature-Based & Component Architecture    |
-| Shared   | `types`, `constants`, `utils`                           | DRY Principle & Type Safety               |
-
-### Design Principles
-- **Separation of Concerns** - Setiap layer punya tanggung jawab jelas
-- **Modularity** - Feature-based untuk mudah maintain & scale
-- **Type Safety** - TypeScript di semua layer
-- **Reusability** - Shared code untuk frontend & backend
-- **Testability** - Struktur yang mudah untuk testing
-- **Scalability** - Mudah menambah fitur baru
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js >= 18
-- Bun >= 1.0
-- PostgreSQL >= 14
-
-### Installation
-```bash
-# Clone repository
-git clone <repository-url>
-
-# Install dependencies
 bun install
+```
 
-# Setup environment variables
+### 3. Konfigurasi Environment Variables
+Salin file `.env.example` pada folder `backend/` menjadi `.env`:
+```bash
 cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+```
+Sesuaikan konfigurasi koneksi database PostgreSQL Anda pada `backend/.env`:
+```env
+DATABASE_URL=postgres://postgres:password123@localhost:5432/schooltech-test
+BASE_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173,http://localhost:5174
+JWT_SECRET=super_secret_jwt_schooltech_2026_key
+```
 
-# Run database migrations
-cd backend
-bun run db:migrate
+### 4. Setup Database & Eksekusi Migrasi
+Jalankan skrip inisialisasi database (otomatis membuat database `schooltech-test` jika belum ada) dan push skema Drizzle:
+```bash
+# Inisialisasi DB
+bun --cwd backend src/db/init-db.ts
 
-# Seed database (optional)
-bun run db:seed
+# Eksekusi migrasi skema tabel Drizzle ORM
+bun --cwd backend run db:push
+```
 
-# Start development servers
+### 5. Jalankan Database Seeder (Data Demo)
+Isi database dengan data contoh realistis (akun guru, 2 akun siswa, 2 kelas, dan 3 tugas):
+```bash
+bun --cwd backend run db:seed
+```
+
+### 6. Jalankan Test Suite & Development Server
+Untuk menjalankan automated test suite:
+```bash
+bun --cwd backend test
+```
+*Hasil: 31 pass, 0 fail (100% lulus).*
+
+Untuk menjalankan aplikasi lengkap (Backend + Frontend sekaligus):
+```bash
 bun run dev
 ```
-
-### Available Scripts
-```bash
-# Development
-bun run dev              # Start both frontend & backend
-bun run dev:frontend     # Start frontend only
-bun run dev:backend      # Start backend only
-
-# Build
-bun run build            # Build both
-bun run build:frontend   # Build frontend
-bun run build:backend    # Build backend
-
-# Testing
-bun run test             # Run all tests
-bun run test:unit        # Run unit tests
-bun run test:e2e         # Run E2E tests
-
-# Database
-bun run db:migrate       # Run migrations
-bun run db:seed          # Seed database
-bun run db:studio        # Open Drizzle Studio
-```
+- Server backend aktif di: **`http://localhost:3000`**
+- Web frontend aktif di: **`http://localhost:5173`**
 
 ---
 
-## 📝 Workflow Development
+## 🔑 Akun Demo Pengujian
 
-1. **Mulai dari Backend**
-   - Buat schema database
-   - Buat migration
-   - Implement service layer
-   - Buat controller & routes
-   - Test dengan API client (Postman/Thunder Client)
+Setelah menjalankan `bun run db:seed`, akun berikut siap langsung digunakan untuk login dan pengujian:
 
-2. **Lanjut ke Frontend**
-   - Buat API service
-   - Buat custom hooks
-   - Develop UI components
-   - Integrate dengan backend
-   - Add form validation
-
-3. **Testing & Refinement**
-   - Unit tests
-   - Integration tests
-   - UI/UX improvements
-   - Performance optimization
+| Peran (Role) | Email | Password | Keterangan / Asosiasi Kelas |
+|---|---|---|---|
+| **👨‍🏫 Guru (Teacher)** | `teacher@example.com` | `password123` | Wali Kelas 10-A, Pembuat Tugas |
+| **🧑‍🎓 Siswa 1 (Student)**| `student1@example.com` | `password123` | Anggota Kelas 10-A (1 tugas sudah selesai) |
+| **🧑‍🎓 Siswa 2 (Student)**| `student2@example.com` | `password123` | Anggota Kelas 10-A (belum ada tugas selesai) |
 
 ---
 
-## 📚 Additional Resources
+## 📡 Daftar Endpoint REST API
 
-- [Hono Documentation](https://hono.dev/)
-- [Drizzle ORM Docs](https://orm.drizzle.team/)
-- [React Documentation](https://react.dev/)
-- [Vite Guide](https://vitejs.dev/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Tailwind CSS](https://tailwindcss.com/docs)
+Base URL Backend: `http://localhost:3000/api`
+
+| Kategori | Method | Endpoint | Hak Akses | Deskripsi & Parameter |
+|---|:---:|---|:---:|---|
+| **Auth** | `POST` | `/auth/register` | Public | Registrasi akun baru (Guru / Siswa). |
+| **Auth** | `POST` | `/auth/login` | Public | Login akun & mendapatkan JWT token. |
+| **Auth** | `GET` | `/auth/me` | Authenticated | Ambil profil pengguna yang sedang login. |
+| **Classes** | `GET` | `/classes` | Authenticated | Ambil daftar kelas yang tersedia. |
+| **Classes** | `GET` | `/classes/:id` | Authenticated | Ambil detail satu kelas beserta wali kelasnya. |
+| **Tasks** | `POST` | `/tasks` | **Teacher** | Buat tugas baru (`title`, `description`, `classId`, `dueDate`). |
+| **Tasks** | `GET` | `/tasks` | Authenticated | List tugas. Dukung query: `?search=...`, `?status=all\|pending\|completed`, `?dueStatus=all\|due_soon\|overdue`, `?page=1&limit=10`. Menyertakan indikator `isDueSoon` dan `isOverdue`. |
+| **Tasks** | `GET` | `/tasks/upcoming` | Authenticated | Ambil daftar tugas yang mendekati tenggat (<48 jam). |
+| **Tasks** | `GET` | `/tasks/stats` | Authenticated | Rekap statistik total tugas, progress ring, dan aktivitas mingguan. |
+| **Tasks** | `GET` | `/tasks/:id` | Authenticated | Detail tugas. Dilindungi guard agar siswa tidak bisa mengintip tugas kelas lain. |
+| **Tasks** | `PUT` | `/tasks/:id` | **Teacher (Owner)** | Perbarui data tugas. Siswa dilarang keras (403 Forbidden). |
+| **Tasks** | `DELETE`| `/tasks/:id` | **Teacher (Owner)** | Hapus tugas beserta relasi pengerjaannya. |
+| **Completion**| `POST` | `/tasks/:id/complete` | **Student** | Tandai tugas selesai. **Idempoten** (`ON CONFLICT DO NOTHING`). |
+| **Completion**| `DELETE`| `/tasks/:id/complete`| **Student** | Batalkan status penyelesaian tugas (*untoggle*). |
+| **Progress** | `GET` | `/tasks/:id/completions`| **Teacher** | Pantau daftar siswa di kelas beserta status selesai dan waktu submit. |
+
+---
+
+## 📮 Dokumentasi API & Pengujian Postman
+
+Untuk mempermudah penguji, berkas Postman Collection dan Environment telah disediakan di folder [`docs/reference/`](./docs/reference/):
+
+1. Buka aplikasi **Postman**.
+2. Klik tombol **Import** di kiri atas.
+3. Pilih berkas [`docs/reference/postman_collection.json`](./docs/reference/postman_collection.json) dan [`docs/reference/postman_environment.json`](./docs/reference/postman_environment.json).
+4. Pilih environment **"Class Task Tracker (Local)"** di pojok kanan atas.
+5. Jalankan request **"Login sebagai Guru"** atau **"Login sebagai Siswa"** di folder `1. Authentication`.  
+   Token JWT akan **otomatis tersimpan** di variabel environment, sehingga Anda dapat langsung mencoba seluruh endpoint tugas tanpa perlu menyalin token secara manual!
+6. Dokumen [OpenAPI 3.1.0 JSON](./docs/reference/openapi.json) juga siap diimpor ke Swagger UI atau alat pengujian API lainnya.
+
+---
+
+## 🏗️ Keputusan Desain & Arsitektur (ADR)
+
+1. **Monorepo Shared Package (`@class-task-tracker/shared`):**  
+   Mencegah perbedaan tipe data (*type drift*) antara backend dan frontend. Perubahan DTO atau enum di satu tempat langsung terdeteksi oleh kompilator TypeScript di seluruh workspace.
+2. **Relasi Kelas Pengguna (Direct FK vs Junction):**  
+   Siswa diasosiasikan langsung dengan `class_id` di tabel `users`. Keputusan ini menjaga query join tetap sederhana, performa tinggi, dan sesuai dengan batasan studi kasus sekolah tanpa kerumitan tabel perantara *many-to-many*.
+3. **Idempotensi Penyelesaian Tugas (Completion Guarantee):**  
+   Penyelesaian tugas dijamin idempoten di level database melalui konstrain unik komposit `UNIQUE(task_id, student_id)`. Operasi `POST /api/tasks/:id/complete` memanfaatkan klausa `ON CONFLICT DO NOTHING`, sehingga klik ganda (*double-click*) dari siswa tidak akan pernah menduplikasi data atau memicu kegagalan server.
+4. **Keamanan Berlapis (Defense-in-Depth):**  
+   - Validasi input Zod di middleware sebelum data mencapai controller/service.
+   - Hashing password `Bun.password` yang adaptif dan kuat terhadap serangan *brute force*.
+   - Filter query berbasis peran pada level SQL query sehingga siswa tidak dapat mengakses tugas di luar kelasnya.
+
+---
+
+## 🤖 Keterbukaan Penggunaan Alat AI (AI Disclosure)
+
+Sesuai instruksi transparansi pada petunjuk tes:
+
+- **Bagian yang dibantu oleh AI:**
+  1. *Boilerplate code setup* awal untuk skrip migrasi Drizzle ORM dan inisialisasi basis data PostgreSQL.
+  2. Pembuatan skema OpenAPI 3.1.0 dan format struktur file JSON koleksi Postman v2.1.
+  3. Pembuatan seeder data contoh (*mock data*) dengan skenario tanggal tenggat bervariasi.
+- **Bagian yang dirancang, diubah, dan diverifikasi sendiri:**
+  1. Rancangan arsitektur database relasional, skema indeks unik komposit untuk idempotensi completion, dan foreign key cascade rules.
+  2. Implementasi logika otorisasi peran (*RBAC middleware*) untuk memastikan proteksi ketat antara guru dan siswa.
+  3. Logika agregasi penyelesaian tugas guru (`completionStats`) dan subquery status pengerjaan personal siswa.
+  4. Penulisan 25 skenario unit & integration test untuk membuktikan keandalan fitur dan kepatuhan terhadap batasan bisnis.
+
+---
+
+## 🔮 Catatan Pengembangan Selanjutnya
+
+- **Antarmuka Web Frontend:** Komponen dan halaman web pada direktori `frontend/` saat ini disiapkan dan menunggu arahan template desain kanonis. Seluruh kontrak API, tipe data shared, dan layanan backend telah 100% siap untuk diintegrasikan secara instan.
+- **Rencana Fitur Lanjutan:**
+  1. *Real-time Notification:* Menggunakan WebSocket/SSE untuk memberikan peringatan dini tugas yang jatuh tempo dalam waktu kurang dari 24 jam.
+  2. *Submission File Attachment:* Integrasi upload berkas tugas siswa (PDF/ZIP) dengan validasi tipe MIME dan penyimpanan cloud storage (S3/R2).
+  3. *Laporan Unduhan:* Ekspor rekapitulasi progres penyelesaian tugas kelas ke format Excel/PDF untuk guru.
+
+---
+
+*Dikembangkan dengan penuh dedikasi untuk Seleksi Magang Fullstack Developer — SchoolTech Indonesia.*

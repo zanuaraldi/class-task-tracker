@@ -11,7 +11,7 @@ import {
   TaskFormModal,
   StudentMonitorModal,
 } from './components/tasks';
-import { Icon } from './components/ui/Icon';
+import { Icon, ToastContainer, type ToastItem } from './components/ui';
 import { api, ApiError } from './services/api';
 
 function MainApp() {
@@ -44,9 +44,25 @@ function MainApp() {
   const [isMonitorModalOpen, setIsMonitorModalOpen] = useState(false);
   const [monitorTask, setMonitorTask] = useState<Task | null>(null);
 
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const toastIdRef = useRef(0);
+
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isTeacher = user?.role === 'teacher';
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  }, []);
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -133,8 +149,10 @@ function MainApp() {
     try {
       if (task.isCompleted) {
         await api.tasks.uncomplete(task.id);
+        showToast('Status tugas diubah menjadi belum selesai.');
       } else {
         await api.tasks.complete(task.id);
+        showToast('Tugas berhasil ditandai selesai! 🎉');
       }
 
       await Promise.all([fetchTasks(), fetchStats()]);
@@ -151,7 +169,7 @@ function MainApp() {
         );
       }
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Gagal memperbarui status tugas.');
+      showToast(err instanceof ApiError ? err.message : 'Gagal memperbarui status tugas.', 'error');
     } finally {
       setTogglingId(null);
     }
@@ -183,9 +201,10 @@ function MainApp() {
 
     try {
       await api.tasks.delete(task.id);
+      showToast('Tugas berhasil dihapus.');
       await Promise.all([fetchTasks(), fetchStats()]);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Gagal menghapus tugas.');
+      showToast(err instanceof ApiError ? err.message : 'Gagal menghapus tugas.', 'error');
     }
   };
 
@@ -219,6 +238,7 @@ function MainApp() {
     return (
       <div className="frame">
         <AuthCard />
+        <ToastContainer toasts={toasts} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -353,6 +373,7 @@ function MainApp() {
           setTaskToEdit(null);
         }}
         onSaved={async () => {
+          showToast(taskToEdit ? 'Tugas berhasil diperbarui.' : 'Tugas baru berhasil dibuat.');
           await Promise.all([fetchTasks(), fetchStats()]);
         }}
       />
@@ -367,6 +388,8 @@ function MainApp() {
           setMonitorTask(null);
         }}
       />
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

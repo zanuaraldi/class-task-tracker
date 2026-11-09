@@ -1,14 +1,36 @@
+import { useState, useEffect, useCallback } from 'react';
+import type { TaskStatsData } from '@class-task-tracker/shared';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthCard } from './components/auth';
+import { Sidebar, HeroHeader } from './components/layout';
+import { StatCards, UpcomingTasksCard, WeeklyActivityCard } from './components/dashboard';
+import { api } from './services/api';
 
 function MainApp() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [activeNav, setActiveNav] = useState<'home' | 'tasks'>('home');
+  const [search, setSearch] = useState('');
+  const [stats, setStats] = useState<TaskStatsData | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await api.tasks.getStats();
+      setStats(data);
+    } catch {
+      // ignore stats error
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   if (isLoading) {
     return (
       <div className="frame" style={{ display: 'grid', placeItems: 'center' }}>
         <div className="state">
-          <span className="spin"></span>
+          <span className="spin" />
           Memuat sesi aplikasi...
         </div>
       </div>
@@ -25,23 +47,48 @@ function MainApp() {
 
   return (
     <div className="frame">
-      <div className="auth-card" style={{ margin: '40px auto', textAlign: 'center' }}>
-        <h2>Selamat Datang, {user.name}!</h2>
-        <p className="sub" style={{ marginTop: '8px' }}>
-          Peran: <b>{user.role === 'teacher' ? '👨‍🏫 Guru' : '🧑‍🎓 Siswa'}</b>
-          {user.classId ? ` · Kelas ID: ${user.classId}` : ''}
-        </p>
-        <p className="muted" style={{ marginBottom: '20px' }}>
-          Autentikasi Fase 2 berhasil terhubung dengan API backend.
-        </p>
-        <button
-          type="button"
-          className="btn ghost"
-          onClick={logout}
-          style={{ width: '100%' }}
-        >
-          Keluar (Logout)
-        </button>
+      <div className="app">
+        <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
+
+        <main>
+          <HeroHeader
+            stats={stats}
+            searchValue={search}
+            onSearchChange={setSearch}
+            onBellClick={() => {
+              const el = document.getElementById('soon');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
+
+          <div className="grid">
+            <div className="l">
+              <StatCards stats={stats} />
+
+              <article className="card" id="tasks">
+                <div className="card-h">
+                  <div>
+                    <h2>Daftar Tugas</h2>
+                    <p className="muted">
+                      {user.role === 'teacher'
+                        ? 'Tugas yang Anda buat, beserta progres siswa.'
+                        : 'Tugas untuk kelasmu, urut dari tenggat terdekat.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="state">
+                  Kerangka dashboard Fase 3 aktif. Siap untuk modul daftar tugas Fase 4.
+                </div>
+              </article>
+            </div>
+
+            <div className="r">
+              <UpcomingTasksCard tasks={stats?.soon || []} />
+              <WeeklyActivityCard week={stats?.week} />
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

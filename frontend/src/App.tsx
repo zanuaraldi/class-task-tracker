@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthCard } from './components/auth';
 
-function App() {
-  const [count, setCount] = useState(0)
+function MainApp() {
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="frame" style={{ display: 'grid', placeItems: 'center' }}>
+        <div className="state">
+          <span className="spin"></span>
+          Memuat sesi aplikasi...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="frame">
+        <AuthCard />
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+    <div className="frame">
+      <div className="auth-card" style={{ margin: '40px auto', textAlign: 'center' }}>
+        <h2>Selamat Datang, {user.name}!</h2>
+        <p className="sub" style={{ marginTop: '8px' }}>
+          Peran: <b>{user.role === 'teacher' ? '👨‍🏫 Guru' : '🧑‍🎓 Siswa'}</b>
+          {user.classId ? ` · Kelas ID: ${user.classId}` : ''}
         </p>
+        <p className="muted" style={{ marginBottom: '20px' }}>
+          Autentikasi Fase 2 berhasil terhubung dengan API backend.
+        </p>
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={logout}
+          style={{ width: '100%' }}
+        >
+          Keluar (Logout)
+        </button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
+  );
+}

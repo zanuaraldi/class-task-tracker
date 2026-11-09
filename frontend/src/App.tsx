@@ -1,10 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Task, TaskStatsData, TaskStatus } from '@class-task-tracker/shared';
+import type { Task, TaskStatsData, TaskStatus, Class } from '@class-task-tracker/shared';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthCard } from './components/auth';
 import { Sidebar, HeroHeader } from './components/layout';
 import { StatCards, UpcomingTasksCard, WeeklyActivityCard } from './components/dashboard';
-import { TaskList, TaskFilterPills, TaskDetailModal } from './components/tasks';
+import {
+  TaskList,
+  TaskFilterPills,
+  TaskDetailModal,
+  TaskFormModal,
+  StudentMonitorModal,
+} from './components/tasks';
+import { Icon } from './components/ui/Icon';
 import { api, ApiError } from './services/api';
 
 function MainApp() {
@@ -13,6 +20,9 @@ function MainApp() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [stats, setStats] = useState<TaskStatsData | null>(null);
+
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [teacherClassFilter, setTeacherClassFilter] = useState<number | 'all'>('all');
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -28,7 +38,32 @@ function MainApp() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  const [isMonitorModalOpen, setIsMonitorModalOpen] = useState(false);
+  const [monitorTask, setMonitorTask] = useState<Task | null>(null);
+
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isTeacher = user?.role === 'teacher';
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchClasses() {
+      if (!isAuthenticated) return;
+      try {
+        const data = await api.classes.getAll();
+        if (mounted) setClasses(data);
+      } catch {
+        // ignore classes fetch error
+      }
+    }
+    fetchClasses();
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (debounceTimer.current) {
@@ -68,6 +103,7 @@ function MainApp() {
         search: debouncedSearch || undefined,
         status: statusFilter,
         dueStatus: dueStatusFilter,
+        classId: isTeacher && teacherClassFilter !== 'all' ? teacherClassFilter : undefined,
       });
 
       setTasks(result.items);
@@ -82,7 +118,7 @@ function MainApp() {
     } finally {
       setIsLoadingTasks(false);
     }
-  }, [isAuthenticated, page, debouncedSearch, statusFilter, dueStatusFilter]);
+  }, [isAuthenticated, page, debouncedSearch, statusFilter, dueStatusFilter, isTeacher, teacherClassFilter]);
 
   useEffect(() => {
     fetchStats();
@@ -131,6 +167,33 @@ function MainApp() {
     setDetailTask(null);
   };
 
+  const handleCreateNew = () => {
+    setTaskToEdit(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setTaskToEdit(task);
+    setIsFormModalOpen(true);
+  };
+
+  const handleDeleteTask = async (task: Task) => {
+    const ok = window.confirm(`Hapus tugas "${task.title}"?\nTindakan ini tidak dapat dibatalkan.`);
+    if (!ok) return;
+
+    try {
+      await api.tasks.delete(task.id);
+      await Promise.all([fetchTasks(), fetchStats()]);
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : 'Gagal menghapus tugas.');
+    }
+  };
+
+  const handleMonitorCompletions = (task: Task) => {
+    setMonitorTask(task);
+    setIsMonitorModalOpen(true);
+  };
+
   const handleNavChange = (nav: 'home' | 'tasks') => {
     setActiveNav(nav);
     if (nav === 'home') {
@@ -159,8 +222,6 @@ function MainApp() {
       </div>
     );
   }
-
-  const isTeacher = user.role === 'teacher';
 
   return (
     <div className="frame">
@@ -194,18 +255,57 @@ function MainApp() {
                   </div>
 
                   <div className="h-r">
-                    <TaskFilterPills
-                      status={statusFilter}
-                      dueStatus={dueStatusFilter}
-                      onStatusChange={(newStatus) => {
-                        setStatusFilter(newStatus);
-                        setPage(1);
-                      }}
-                      onDueStatusChange={(newDue) => {
-                        setDueStatusFilter(newDue);
-                        setPage(1);
-                      }}
-                    />
+                    {isTeacher ? (
+                      <>
+                        <select
+                          value={teacherClassFilter}
+                          onChange={(e) => {
+                            setTeacherClassFilter(
+                              e.target.value === 'all' ? 'all' : Number(e.target.value)
+                            );
+                            setPage(1);
+                          }}
+                          style={{
+                            width: 'auto',
+                            margin: 0,
+                            padding: '8px 14px',
+                            fontSize: '12px',
+                            borderRadius: '999px',
+                            border: '1px solid #dcdcdc',
+                          }}
+                        >
+                          <option value="all">Semua Kelas</option>
+                          {classes.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="button"
+                          className="btn lime"
+                          onClick={handleCreateNew}
+                          style={{ padding: '8px 18px', fontSize: '12px' }}
+                        >
+                          <Icon name="plus" size={14} style={{ marginRight: '6px' }} />
+                          Tugas Baru
+                        </button>
+                      </>
+                    ) : (
+                      <TaskFilterPills
+                        status={statusFilter}
+                        dueStatus={dueStatusFilter}
+                        onStatusChange={(newStatus) => {
+                          setStatusFilter(newStatus);
+                          setPage(1);
+                        }}
+                        onDueStatusChange={(newDue) => {
+                          setDueStatusFilter(newDue);
+                          setPage(1);
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -220,6 +320,9 @@ function MainApp() {
                   onRetry={fetchTasks}
                   onToggleComplete={handleToggleComplete}
                   onOpenDetail={handleOpenDetail}
+                  onEditTask={handleEditTask}
+                  onDeleteTask={handleDeleteTask}
+                  onMonitorCompletions={handleMonitorCompletions}
                   togglingId={togglingId}
                 />
               </article>
@@ -239,6 +342,30 @@ function MainApp() {
         onClose={handleCloseDetail}
         onToggleComplete={handleToggleComplete}
         isToggling={detailTask ? togglingId === detailTask.id : false}
+      />
+
+      <TaskFormModal
+        isOpen={isFormModalOpen}
+        taskToEdit={taskToEdit}
+        classes={classes}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setTaskToEdit(null);
+        }}
+        onSaved={async () => {
+          await Promise.all([fetchTasks(), fetchStats()]);
+        }}
+      />
+
+      <StudentMonitorModal
+        taskId={monitorTask?.id || null}
+        taskTitle={monitorTask?.title || ''}
+        classNameText={monitorTask?.class?.name || `Kelas ${monitorTask?.classId || ''}`}
+        isOpen={isMonitorModalOpen}
+        onClose={() => {
+          setIsMonitorModalOpen(false);
+          setMonitorTask(null);
+        }}
       />
     </div>
   );

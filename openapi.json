@@ -1,0 +1,503 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Class Task Tracker REST API",
+    "version": "1.0.0",
+    "description": "Dokumentasi spesifikasi REST API resmi untuk Class Task Tracker — SchoolTech Indonesia Fullstack Internship Technical Test.",
+    "contact": {
+      "name": "SchoolTech Indonesia Candidate"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Server Pengembangan Lokal"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Registrasi Pengguna Baru",
+        "description": "Mendaftarkan pengguna baru dengan peran Guru atau Siswa.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pengguna berhasil didaftarkan dan token dikembalikan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email sudah digunakan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validasi input gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login Pengguna",
+        "description": "Autentikasi menggunakan email dan password untuk mendapatkan token JWT.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Email atau password salah",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Ambil Profil Pengguna Login",
+        "description": "Mengembalikan identitas pengguna dan relasi kelas berdasarkan JWT token.",
+        "responses": {
+          "200": {
+            "description": "Profil berhasil dimuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Belum terautentikasi atau token tidak valid"
+          }
+        }
+      }
+    },
+    "/classes": {
+      "get": {
+        "summary": "Daftar Seluruh Kelas",
+        "description": "Mengambil daftar ruang kelas beserta guru pengampu dan jumlah siswa.",
+        "responses": {
+          "200": {
+            "description": "Daftar kelas berhasil dimuat"
+          }
+        }
+      }
+    },
+    "/classes/{id}": {
+      "get": {
+        "summary": "Detail Kelas",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Detail kelas dan siswa di dalamnya" },
+          "404": { "description": "Kelas tidak ditemukan" }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "summary": "Daftar Tugas (Search, Filter, Paginasi)",
+        "description": "Guru melihat tugas buatannya dengan statistik penyelesaian; Siswa melihat tugas kelasnya beserta status pribadi.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Substring pencarian judul tugas",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter status penyelesaian ('all', 'completed', 'pending')",
+            "schema": { "type": "string", "enum": ["all", "completed", "pending"] }
+          },
+          {
+            "name": "dueStatus",
+            "in": "query",
+            "description": "Filter batas tenggat waktu ('all', 'due_soon', 'overdue')",
+            "schema": { "type": "string", "enum": ["all", "due_soon", "overdue"] }
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "description": "Filter ID kelas",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar tugas terpaginasi berhasil dimuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Guru: Buat Tugas Baru",
+        "description": "Hanya dapat diakses oleh role 'teacher'.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Tugas berhasil dibuat" },
+          "403": { "description": "Akses ditolak (siswa dilarang membuat tugas)" },
+          "422": { "description": "Validasi judul / kelas gagal" }
+        }
+      }
+    },
+    "/tasks/upcoming": {
+      "get": {
+        "summary": "Tugas Mendekati Tenggat Waktu (< 48 Jam)",
+        "description": "Bagi siswa: mengembalikan tugas belum selesai yang jatuh tempo dalam <48 jam. Bagi guru: mengembalikan tugas aktif buatannya yang mendekati tenggat.",
+        "responses": {
+          "200": {
+            "description": "Daftar tugas mendekati tenggat berhasil dimuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Task" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "summary": "Detail Tugas",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Detail tugas berhasil dimuat" },
+          "403": { "description": "Siswa dilarang membuka tugas kelas lain" },
+          "404": { "description": "Tugas tidak ditemukan" }
+        }
+      },
+      "put": {
+        "summary": "Guru: Edit Tugas",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tugas berhasil diperbarui" },
+          "403": { "description": "Ditolak (bukan pemilik tugas)" },
+          "404": { "description": "Tugas tidak ditemukan" }
+        }
+      },
+      "delete": {
+        "summary": "Guru: Hapus Tugas",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Tugas berhasil dihapus" },
+          "403": { "description": "Ditolak (bukan pemilik tugas)" },
+          "404": { "description": "Tugas tidak ditemukan" }
+        }
+      }
+    },
+    "/tasks/{id}/complete": {
+      "post": {
+        "summary": "Siswa: Tandai Tugas Selesai",
+        "description": "Hanya dapat diakses oleh role 'student'. Bersifat idempoten.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Tugas berhasil ditandai selesai" },
+          "403": { "description": "Guru ditolak atau siswa dari kelas lain" },
+          "404": { "description": "Tugas tidak ditemukan" }
+        }
+      },
+      "delete": {
+        "summary": "Siswa: Batalkan Status Selesai",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Status tugas diubah kembali menjadi belum selesai" }
+        }
+      }
+    },
+    "/tasks/{id}/completions": {
+      "get": {
+        "summary": "Guru: Pantau Progres Siswa di Kelas",
+        "description": "Menampilkan daftar seluruh nama siswa di kelas tugas beserta status pengerjaannya.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daftar status progres siswa berhasil dimuat" },
+          "403": { "description": "Siswa dilarang mengakses data ini" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "RegisterInput": {
+        "type": "object",
+        "required": ["name", "email", "password", "role"],
+        "properties": {
+          "name": { "type": "string", "example": "Aditya Pratama" },
+          "email": { "type": "string", "format": "email", "example": "adit@example.com" },
+          "password": { "type": "string", "minLength": 6, "example": "password123" },
+          "role": { "type": "string", "enum": ["teacher", "student"], "example": "student" },
+          "classId": { "type": "integer", "nullable": true, "example": 1 }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "teacher@example.com" },
+          "password": { "type": "string", "example": "password123" }
+        }
+      },
+      "CreateTaskInput": {
+        "type": "object",
+        "required": ["title", "classId"],
+        "properties": {
+          "title": { "type": "string", "minLength": 3, "maxLength": 200, "example": "Tugas REST API" },
+          "description": { "type": "string", "nullable": true, "example": "Buat endpoint autentikasi" },
+          "classId": { "type": "integer", "example": 1 },
+          "dueDate": { "type": "string", "format": "date-time", "nullable": true, "example": "2026-11-20T23:59:00Z" }
+        }
+      },
+      "UpdateTaskInput": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "minLength": 3, "maxLength": 200 },
+          "description": { "type": "string", "nullable": true },
+          "classId": { "type": "integer" },
+          "dueDate": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "AuthSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Login berhasil" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": { "type": "string" },
+              "user": { "$ref": "#/components/schemas/User" }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "role": { "type": "string", "enum": ["teacher", "student"] },
+          "classId": { "type": "integer", "nullable": true }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "TaskListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": {
+            "type": "object",
+            "properties": {
+              "items": { "type": "array", "items": { "type": "object" } },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "page": { "type": "integer", "example": 1 },
+                  "limit": { "type": "integer", "example": 10 },
+                  "total": { "type": "integer", "example": 3 },
+                  "totalPages": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "classId": { "type": "integer" },
+          "teacherId": { "type": "integer" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "dueDate": { "type": "string", "format": "date-time", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "isCompleted": { "type": "boolean" },
+          "completedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "isOverdue": { "type": "boolean" },
+          "isDueSoon": { "type": "boolean" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string", "example": "Terjadi kesalahan" }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string", "example": "Validasi data input gagal" },
+          "errors": { "type": "object" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: class-task-tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: schooltech-test
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d schooltech-test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: class-task-tracker-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:password123@db:5432/schooltech-test
+      BASE_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:5173,http://localhost:5174
+      JWT_SECRET: super_secret_jwt_schooltech_2026_key
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "bun run src/db/init-db.ts &&
+             bun run db:push &&
+             bun run db:seed &&
+             bun run src/index.ts"
+
+volumes:
+  pgdata:
+    name: class-task-tracker-pgdata

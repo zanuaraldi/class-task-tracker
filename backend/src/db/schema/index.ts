@@ -1,2 +1,4 @@
-export * from "./siswa.schema";
-export * from "./kelas.schema";
+export * from './users.schema';
+export * from './classes.schema';
+export * from './tasks.schema';
+export * from './task-completions.schema';

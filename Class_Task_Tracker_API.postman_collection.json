@@ -1,0 +1,403 @@
+{
+  "info": {
+    "_postman_id": "class-task-tracker-collection-v1",
+    "name": "Class Task Tracker API — SchoolTech Indonesia",
+    "description": "Koleksi API resmi untuk Class Task Tracker (Fullstack Internship Technical Test). Dilengkapi dengan auto-token update script, contoh payload, dan filter pencarian.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Endpoints registrasi, login multi-peran, dan profil pengguna",
+      "item": [
+        {
+          "name": "Login sebagai Guru (Teacher Demo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 200 && res.data && res.data.token) {",
+                  "    pm.environment.set('token', res.data.token);",
+                  "    console.log('✅ Token Guru berhasil disimpan ke environment.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{teacherEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login menggunakan akun Guru bawaan seeder. Script otomatis menyimpan JWT token ke variabel `{{token}}`."
+          }
+        },
+        {
+          "name": "Login sebagai Siswa 1 (Student Demo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 200 && res.data && res.data.token) {",
+                  "    pm.environment.set('token', res.data.token);",
+                  "    console.log('✅ Token Siswa berhasil disimpan ke environment.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{student1Email}}\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login menggunakan akun Siswa 1. Script otomatis menyimpan JWT token ke variabel `{{token}}`."
+          }
+        },
+        {
+          "name": "Registrasi Pengguna Baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 201 && res.data && res.data.token) {",
+                  "    pm.environment.set('token', res.data.token);",
+                  "    console.log('✅ Token pendaftaran berhasil disimpan.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Siswa Baru Test\",\n  \"email\": \"siswa.baru@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\",\n  \"classId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Mendaftarkan user baru dengan role `teacher` atau `student`."
+          }
+        },
+        {
+          "name": "Ambil Profil Pengguna Login (/api/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Mengambil data profil lengkap dari JWT token yang sedang aktif."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Classes",
+      "description": "Endpoints informasi ruang kelas",
+      "item": [
+        {
+          "name": "Ambil Semua Kelas (/api/classes)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes",
+              "host": ["{{baseUrl}}"],
+              "path": ["classes"]
+            },
+            "description": "Mendapatkan daftar seluruh kelas beserta guru pengampu dan jumlah siswa."
+          }
+        },
+        {
+          "name": "Detail Kelas berdasarkan ID (/api/classes/:id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes/{{classId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["classes", "{{classId}}"]
+            },
+            "description": "Mengambil informasi detail kelas dan daftar siswa di dalamnya."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Task Management (Teacher)",
+      "description": "Endpoints pengelolaan tugas khusus Guru",
+      "item": [
+        {
+          "name": "Guru: Buat Tugas Baru (POST /api/tasks)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 201 && res.data && res.data.id) {",
+                  "    pm.environment.set('taskId', res.data.id);",
+                  "    console.log('✅ Task ID berhasil diperbarui ke:', res.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tugas Baru Melalui Postman\",\n  \"description\": \"Instruksi tugas yang dibuat langsung dari Postman collection.\",\n  \"classId\": 1,\n  \"dueDate\": \"2026-11-20T23:59:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Membuat tugas baru (Khusus Guru). ID tugas yang baru dibuat otomatis disimpan ke `{{taskId}}`."
+          }
+        },
+        {
+          "name": "Guru: Daftar Tugas & Statistik Penyelesaian",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "Mengambil daftar tugas guru dengan metrik penyelesaian (berapa siswa yang sudah mengumpulkan vs total siswa)."
+          }
+        },
+        {
+          "name": "Guru: Cari Tugas berdasarkan Judul (?search=...)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?search=REST",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [{ "key": "search", "value": "REST" }]
+            },
+            "description": "Pencarian judul tugas (case-insensitive substring)."
+          }
+        },
+        {
+          "name": "Guru: Detail Tugas Lengkap (GET /api/tasks/:id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Mengambil rincian informasi satu tugas."
+          }
+        },
+        {
+          "name": "Guru: Pantau Progres Siswa (/api/tasks/:id/completions)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}", "completions"]
+            },
+            "description": "Melihat daftar seluruh nama siswa di kelas terkait beserta status `isCompleted` dan waktu penyelesaiannya."
+          }
+        },
+        {
+          "name": "Guru: Update Tugas (PUT /api/tasks/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Judul Tugas Diperbarui via Postman\",\n  \"description\": \"Deskripsi tugas yang telah diperbarui.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Memperbarui informasi tugas milik guru."
+          }
+        },
+        {
+          "name": "Guru: Hapus Tugas (DELETE /api/tasks/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Menghapus tugas beserta seluruh rekaman completion terkait (cascade)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Task Completion (Student)",
+      "description": "Endpoints penyelesaian tugas khusus Siswa",
+      "item": [
+        {
+          "name": "Siswa: Daftar Tugas Kelas Saya (GET /api/tasks)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Siswa melihat daftar seluruh tugas yang diberikan untuk kelasnya beserta status personal `isCompleted`."
+          }
+        },
+        {
+          "name": "Siswa: Tugas Mendekati Tenggat Waktu (GET /api/tasks/upcoming)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/upcoming",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "upcoming"]
+            },
+            "description": "Mengambil daftar tugas siswa yang belum diselesaikan dan jatuh tempo dalam waktu kurang dari 48 jam."
+          }
+        },
+        {
+          "name": "Siswa: Filter Tugas Perlu Dikerjakan (?status=pending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [{ "key": "status", "value": "pending" }]
+            },
+            "description": "Menampilkan hanya tugas yang belum ditandai selesai oleh siswa."
+          }
+        },
+        {
+          "name": "Siswa: Filter Tugas Sudah Selesai (?status=completed)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?status=completed",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [{ "key": "status", "value": "completed" }]
+            },
+            "description": "Menampilkan tugas yang telah berhasil diselesaikan oleh siswa."
+          }
+        },
+        {
+          "name": "Siswa: Tandai Tugas Selesai (POST /api/tasks/:id/complete)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}", "complete"]
+            },
+            "description": "Menandai tugas sebagai selesai. Bersifat idempoten (tidak memicu duplikasi data)."
+          }
+        },
+        {
+          "name": "Siswa: Batalkan Status Selesai (DELETE /api/tasks/:id/complete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}", "complete"]
+            },
+            "description": "Membatalkan status penyelesaian tugas siswa."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Health Check",
+      "description": "Status kesehatan server backend",
+      "item": [
+        {
+          "name": "Health Status",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["health"]
+            },
+            "description": "Pengecekan apakah server backend Hono aktif dan berjalan."
+          }
+        }
+      ]
+    }
+  ]
+}

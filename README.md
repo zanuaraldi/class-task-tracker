@@ -38,12 +38,14 @@ Sesuai ketentuan tes yang membebaskan pemilihan stack, proyek ini memilih kombin
 
 ```bash
 class-task-tracker/
-├── backend/            # REST API Service (Bun + Hono + Drizzle ORM + PostgreSQL)
-├── frontend/           # Web Client SPA (React 19 + Vite + Tailwind CSS v4)
-├── shared/             # Package @class-task-tracker/shared (DTO, Interfaces, Types, Constants)
-├── docs/               # Dokumentasi API, Postman collections, dan referensi
-├── docker-compose.yml  # Orkestrasi Docker database & backend
-└── package.json        # Workspace orchestrator
+├── backend/                                                # REST API Service (Bun + Hono + Drizzle ORM + PostgreSQL)
+├── frontend/                                               # Web Client SPA (React 19 + Vite + Tailwind CSS v4)
+├── shared/                                                 # Package @class-task-tracker/shared (DTO, Interfaces, Types)
+├── docker-compose.yml                                      # Orkestrasi Docker database & backend
+├── Class_Task_Tracker_API.postman_collection.json          # Dokumentasi & Koleksi Postman API
+├── Class_Task_Tracker_Environment.postman_environment.json # Environment Postman (Local)
+├── openapi.json                                            # Dokumen Spesifikasi OpenAPI 3.1
+└── package.json                                            # Workspace orchestrator
 ```
 
 ### Kenapa Memilih Stack Ini?
@@ -90,8 +92,8 @@ Semua 4 poin nilai tambah pada petunjuk tes berhasil diimplementasikan:
 1. **Automated Integration Test Suite (31 Tests Passed):**  
    Pengujian otomatis menggunakan `bun:test` mencakup flow registrasi email ganda, validasi JWT, proteksi RBAC (siswa dilarang CRUD tugas), isolasi data antar kelas, filter & pencarian tugas, serta idempotensi pengerjaan tugas (`ON CONFLICT DO NOTHING`).
 2. **Dokumentasi API Lengkap (Postman Collection v2.1 + OpenAPI 3.1):**  
-   - Koleksi Postman di [`docs/reference/`](./docs/reference/) sudah dilengkapi skrip otomatis *token capture* (`pm.environment.set`). Cukup klik tombol Login sekali, seluruh request tugas berikutnya langsung otomatis terotentikasi.
-   - Dokumen spesifikasi [OpenAPI 3.1.0](./docs/reference/openapi.json) siap diimpor ke Swagger UI.
+   - Koleksi Postman ([`Class_Task_Tracker_API.postman_collection.json`](./Class_Task_Tracker_API.postman_collection.json)) dan Environment ([`Class_Task_Tracker_Environment.postman_environment.json`](./Class_Task_Tracker_Environment.postman_environment.json)) sudah disediakan langsung di root proyek, lengkap dengan skrip otomatis *token capture* (`pm.environment.set`). Cukup klik tombol Login sekali, seluruh request tugas berikutnya langsung otomatis terotentikasi.
+   - Dokumen spesifikasi [OpenAPI 3.1.0](./openapi.json) siap diimpor ke Swagger UI atau API viewer.
 3. **Setup Instan dengan Docker Compose:**  
    Menyediakan `docker-compose.yml` yang siap menjalankan PostgreSQL 17 dan Backend Hono sekaligus secara otomatis (auto-migrate + auto-seed).
 4. **Peringatan Tenggat Tugas (Deadline Warning & Upcoming Tasks):**  
@@ -179,13 +181,24 @@ bun test
 ```
 *Hasil: 31 passed, 0 failed (100% lulus).*
 
-#### Langkah 7: Jalankan Aplikasi (Frontend + Backend)
-Jalankan kedua service sekaligus dalam satu perintah:
+#### Langkah 7: Jalankan Backend & Frontend (Terminal Terpisah)
+Jalankan backend dan frontend pada **2 jendela terminal terpisah** agar log proses masing-masing service terpantau jelas:
+
+**Terminal 1 — Backend API (Hono):**
 ```bash
+cd backend
 bun run dev
 ```
-- **Backend API:** `http://localhost:3000` (Health check: `http://localhost:3000/health`)
-- **Frontend Web:** `http://localhost:5173`
+*(atau dari root proyek: `bun run dev:backend`)*  
+Backend aktif di `http://localhost:3000` (Health check: `http://localhost:3000/health`).
+
+**Terminal 2 — Frontend Web (React + Vite):**
+```bash
+cd frontend
+bun run dev
+```
+*(atau dari root proyek: `bun run dev:frontend`)*  
+Frontend aktif di `http://localhost:5173` (atau port otomatis selanjutnya jika 5173 terpakai).
 
 ---
 
@@ -229,15 +242,15 @@ Base URL Backend: `http://localhost:3000/api`
 
 ## 📮 Dokumentasi API & Pengujian Postman
 
-Berkas Postman Collection dan Environment telah disiapkan di folder [`docs/reference/`](./docs/reference/):
+Berkas Postman Collection dan Environment telah disiapkan langsung di **root proyek**:
 
 1. Buka aplikasi **Postman**.
-2. Klik tombol **Import** dan pilih kedua berkas:
-   - [`docs/reference/postman_collection.json`](./docs/reference/postman_collection.json)
-   - [`docs/reference/postman_environment.json`](./docs/reference/postman_environment.json)
+2. Klik tombol **Import** dan pilih kedua berkas berikut dari folder root:
+   - [`Class_Task_Tracker_API.postman_collection.json`](./Class_Task_Tracker_API.postman_collection.json)
+   - [`Class_Task_Tracker_Environment.postman_environment.json`](./Class_Task_Tracker_Environment.postman_environment.json)
 3. Pilih environment **"Class Task Tracker (Local)"** di pojok kanan atas Postman.
 4. Buka folder `1. Authentication` lalu jalankan request **"Login sebagai Guru"** atau **"Login sebagai Siswa"**.  
-   *Token JWT otomatis tersimpan ke environment*, sehingga semua request tugas di folder lainnya bisa langsung dijalankan tanpa repot copy-paste token manual.
+   *Token JWT otomatis tersimpan ke environment*, sehingga seluruh request tugas di folder lainnya bisa langsung dijalankan tanpa repot menyalin token secara manual.
 
 ---
 

@@ -8,7 +8,9 @@
     "shared"
   ],
   "scripts": {
-    "dev": "bun run --cwd backend dev & bun run --cwd frontend dev",
+    "dev:backend": "bun run --cwd backend dev",
+    "dev:frontend": "bun run --cwd frontend dev",
+    "dev": "bun --filter \"*\" --parallel run dev",
     "build": "bun run --cwd backend build && bun run --cwd frontend build",
     "db:init": "bun run --cwd backend db:init",
     "db:push": "bun run --cwd backend db:push",

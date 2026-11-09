@@ -1,4 +1,10 @@
 {
-  "name": "@react-typescript-starter-code-v2/shared",
-  "type": "module"
+  "name": "@class-task-tracker/shared",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./*": "./*"
+  }
 }

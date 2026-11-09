@@ -1,15 +1,14 @@
-# shared
+# 📦 @class-task-tracker/shared
 
-To install dependencies:
+Paket pustaka bersama (*Shared Package*) untuk aplikasi **Class Task Tracker**, bertindak sebagai *Single Source of Truth* (SSOT) kontrak data antara backend dan frontend.
 
-```bash
-bun install
-```
+---
 
-To run:
+## 📑 Struktur Isi
 
-```bash
-bun run index.ts
-```
+- `constants/`: Konstanta peran (`USER_ROLES = ['teacher', 'student']`) dan status tugas (`TASK_STATUS = ['all', 'completed', 'pending']`).
+- `types/entities/`: Interface TypeScript entitas basis data (`User`, `Class`, `Task`, `TaskCompletion`).
+- `types/dtos/`: Data Transfer Objects (DTO) untuk validasi request payload dan struktur standardized response.
+- `utils/`: Utilitas pemformatan tanggal Indonesia (`formatDate`, `formatDateTime`) dan komputasi tenggat waktu (`isOverdue`, `isDueSoon`).
 
-This project was created using `bun init` in bun v1.2.11. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+Paket ini diimpor oleh `@class-task-tracker/backend` dan `@class-task-tracker/frontend` via Bun Workspaces (`workspace:*`).

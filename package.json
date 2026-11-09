@@ -1,0 +1,14 @@
+{
+  "name": "react-typescript-starter-code-v2",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "bun run --cwd backend dev & bun run --cwd frontend dev",
+    "build": "bun run --cwd backend build && bun run --cwd frontend build"
+  }
+}

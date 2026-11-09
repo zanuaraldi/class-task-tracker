@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": "./src",
+    "outDir": "dist",
+    "paths": {
+      "@/*": [
+        "*"
+      ],
+      "@shared/*": [
+        "../shared/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

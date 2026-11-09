@@ -1,0 +1,20 @@
+{
+  "name": "@react-typescript-starter-code-v2/backend",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.5",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.6",
+    "pg": "^8.16.3",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.5",
+    "tsx": "^4.20.6"
+  }
+}
